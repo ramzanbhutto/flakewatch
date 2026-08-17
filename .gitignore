@@ -1,0 +1,12 @@
+# Build output
+flakewatch
+
+# Python
+__pycache__/
+*.pyc
+
+# Go
+*.test
+
+# Env
+.env
