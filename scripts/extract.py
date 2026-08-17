@@ -54,7 +54,11 @@ def fetch_log_text(logs_url: str, token: str) -> str:
 
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
-            raw = resp.read(MAX_LOG_BYTES)
+            try:
+                raw = resp.read(MAX_LOG_BYTES)
+            except Exception:
+                raw = resp.read(0) or b""
+                pass
     except urllib.error.HTTPError as e:
         raise RuntimeError(f"HTTP {e.code} fetching logs: {e.reason}")
     except urllib.error.URLError as e:

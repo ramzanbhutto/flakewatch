@@ -132,7 +132,7 @@ func (c *Client) FetchLogsURL(runID int64) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 302 {
+	if resp.StatusCode == 302 || resp.StatusCode == 301 {
 		return resp.Header.Get("Location"), nil
 	}
 
