@@ -1,5 +1,5 @@
 # Build output
-flakewatch
+/flakewatch
 
 # Python
 __pycache__/
