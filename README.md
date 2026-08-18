@@ -48,8 +48,8 @@ flakewatch/
 
 - Go 1.26.5+
 - Python 3.9+
-- `GITHUB_TOKEN` -- required (see below)
-- `ANTHROPIC_API_KEY` -- optional, enables LLM analysis
+- `GITHUB_TOKEN` - required (see below)
+- `GROQ_API_KEY` - optional, enables LLM analysis (free)
 
 ---
 
@@ -65,13 +65,13 @@ flakewatch/
 
 ---
 
-## Getting an Anthropic API Key (optional, for LLM analysis)
+## Getting a Groq API Key (optional, for LLM analysis)
 
-1. Go to **console.anthropic.com** and create an account
-2. Click **API Keys** on the left sidebar
-3. Click  **Create Key**
-3. Copy the key
+1. Go to **console.groq.com** and create an account
+2. Click **API Keys** on the top bar 
+3. Click **Create API Key** and copy it
 
+Free tier is generous - no credit card needed.
 Without this key, flakewatch still works using pattern matching only.
 
 ---
@@ -104,7 +104,7 @@ export GITHUB_TOKEN=your_github_token
 
 ```bash
 export GITHUB_TOKEN=your_github_token
-export ANTHROPIC_API_KEY=your_anthropic_key
+export GROQ_API_KEY=your_groq_key
 
 ./flakewatch \
   --owner containers \
@@ -122,36 +122,48 @@ export ANTHROPIC_API_KEY=your_anthropic_key
 | `--limit`  | `10`         | Max failed runs to fetch           |
 | `--script` | auto-detect  | Path to `extract.py`               |
 
+
+> You can change `--limit` to fetch more or fewer runs.
+
 ---
 
-## Example Output
+## Example Output (limit:5)
 
 ```
 ────────────────────────────────────────────────────────────────────────
-  flakewatch report  ·  2026-08-17 20:05 UTC
+  flakewatch report  ·  2026-08-18 21:11 UTC
 ────────────────────────────────────────────────────────────────────────
 
   Total failed runs analyzed: 5
 
   Category Breakdown
   ────────────────────────────────────────
-  Network Timeout          █ 1
+  Infrastructure Blip      █ 1
   Unknown                  ████ 4
 
 ────────────────────────────────────────────────────────────────────────
 
-  [3/5] Run #32044569797
-        Workflow : Running Copilot Code Review
+  [1/5] Run #32176110300
+        Workflow : ci
         Branch   : main
-        Category : Network Timeout
-        Confidence: 85%
-        Summary  : Pattern match: network_timeout
-        URL      : https://github.com/containers/podman/actions/runs/32044569797
+        Category : Infrastructure Blip
+        Confidence: 78%
+        Summary  : The log is garbled binary output, indicating the CI runner
+                   encountered an infrastructure-level failure.
+        Fix hint : Rerun the job on a fresh runner and check for any runner
+                   health issues.
+        URL      : https://github.com/containers/podman/actions/runs/32176110300
 
-        Failure region:
-        │ 2026-08-17T16:10:55.9078221Z })")
-        │ 2026-08-17T16:10:55.9079849Z printf '%s' "$secrets" | "$RUNNER_PATH/**
-        │ ... (11 more lines)
+  [3/5] Run #32144725978
+        Workflow : ci
+        Branch   : no-heading
+        Category : Unknown
+        Confidence: 78%
+        Summary  : The provided log excerpt ends before any error appears,
+                   making the root cause indiscernible.
+        Fix hint : Include the portion of the log that contains the actual
+                   failure message or test output.
+        URL      : https://github.com/containers/podman/actions/runs/32144725978
 ```
 
 ---

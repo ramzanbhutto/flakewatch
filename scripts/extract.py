@@ -19,7 +19,7 @@ import zipfile
 import urllib.request
 import urllib.error
 from typing import Optional
-
+import zlib
 
 # Helper
 
@@ -71,13 +71,24 @@ def fetch_log_text(logs_url: str, token: str) -> str:
         # Sometimes the URL is a direct log, not a zip
         return raw.decode("utf-8", errors="replace")
 
-    # Pick the largest file in the zip (most likely the main job log)
-    entries = sorted(zf.infolist(), key=lambda e: e.file_size, reverse=True)
+    # GitHub zeros out file_size in zip metadata -- sort by filename number prefix instead
+    entries = sorted(
+        [e for e in zf.infolist() if e.filename.endswith('.txt') and not e.filename.endswith('system.txt')],
+        key=lambda e: e.filename,
+        reverse=True
+    )
+    if not entries:
+        entries = sorted(zf.infolist(), key=lambda e: e.filename, reverse=True)
     if not entries:
         raise RuntimeError("zip archive is empty")
 
     with zf.open(entries[0]) as f:
-        return f.read(MAX_LOG_BYTES).decode("utf-8", errors="replace")
+        raw = f.read(MAX_LOG_BYTES)
+        try:
+            raw = zlib.decompress(raw, 47)  # 47 = gzip format
+        except Exception:
+            pass
+        return raw.decode("utf-8", errors="replace")
 
 
 def extract_failure_region(log_text: str) -> tuple[list[str], int]:
@@ -117,12 +128,13 @@ def classify_by_pattern(region_lines: list[str]) -> tuple[str, float]:
             return category, 0.85
     return "unknown", 0.0
 
+
 def classify_with_llm(region_text: str, run_id: str) -> Optional[dict]:
     """
-    Call the Anthropic API to categorize the failure.
+    Call the Groq API to categorize the failure.
     Falls back to pattern-only result if API key is not set.
     """
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    api_key = os.environ.get("GROQ_API_KEY", "").strip()
     if not api_key:
         return None
 
@@ -154,32 +166,37 @@ Log excerpt:
 ---"""
 
     payload = json_lib.dumps({
-        "model": "claude-sonnet-4-6",
-        "max_tokens": 256,
+        "model": "groq/compound-mini",
+        "max_completion_tokens": 256,
         "messages": [{"role": "user", "content": prompt}],
     }).encode()
 
     request = req_lib.Request(
-        "https://api.anthropic.com/v1/messages",
+        "https://api.groq.com/openai/v1/chat/completions",
         data=payload,
         headers={
-            "x-api-key": api_key,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         },
         method="POST",
     )
 
     try:
         with req_lib.urlopen(request, timeout=30) as resp:
-            data = json_lib.loads(resp.read())
-        text = data["content"][0]["text"].strip()
+            raw = resp.read()
+        data = json_lib.loads(raw)
+        text = data["choices"][0]["message"]["content"].strip()
         # Strip markdown fences if present
         text = re.sub(r"^```[a-z]*\n?", "", text)
         text = re.sub(r"\n?```$", "", text)
         return json_lib.loads(text)
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        sys.stderr.write(f"LLM call failed: {e}\n")
+        sys.stderr.write(f"LLM error body: {body}\n")
+        return None
     except Exception as e:
-        # LLM call failed - fall back to pattern result
         sys.stderr.write(f"LLM call failed: {e}\n")
         return None
 

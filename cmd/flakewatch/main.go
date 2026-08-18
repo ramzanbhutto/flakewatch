@@ -1,7 +1,7 @@
 // flakewatch: Agentic CI flake categorization for Podman and CNCF projects.
 // Environment variables:
 //	GITHUB_TOKEN - required for private repos, avoids rate limiting
-//	ANTHROPIC_API_KEY - optional, enables LLM-based categorization
+//	GROQ_API_KEY - optional, enables LLM-based categorization
 package main
 
 import(
