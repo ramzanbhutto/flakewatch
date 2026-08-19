@@ -22,7 +22,7 @@ Built as part of a CNCF LFX Mentorship 2026 Term 3 application for the **Podman 
 Categorization is done in two stages:
 
 1. **Pattern matching** (fast, no API key needed) - regex rules derived from real Podman CI flake history
-2. **LLM analysis** (optional) - sends the failure region to Claude for a richer plain-English explanation and fix hint
+2. **LLM analysis** (optional) - sends the failure region to LLM for a richer plain-English explanation and fix hint
 
 ---
 
