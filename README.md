@@ -1,14 +1,12 @@
 # flakewatch
 
-Automated CI flake categorization for Podman and CNCF projects.
-
-Built as part of a CNCF LFX Mentorship 2026 Term 3 application for the **Podman Container Tools: Agentic CI Flake Categorization and Analysis** project.
+flakewatch is a CLI tool that fetches failed GitHub Actions runs from any public repo, pulls out the relevant failure region from each log and figures out whether it's a known flake pattern or an actual regression. It uses regex pattern matching first, with an optional LLM fallback for cases that need more context.
 
 ---
 
 ## What It Does
 
-`flakewatch` fetches failed GitHub Actions workflow runs, extracts the failure region from the logs, and categorizes each failure into one of six categories:
+You point `flakewatch` at a repo and it goes and grabs the failed runs, digs through the logs for the part that actually broke, and sorts each one into six categories:
 
 | Category              | Meaning                                           |
 |-----------------------|---------------------------------------------------|
@@ -21,7 +19,7 @@ Built as part of a CNCF LFX Mentorship 2026 Term 3 application for the **Podman 
 
 Categorization is done in two stages:
 
-1. **Pattern matching** (fast, no API key needed) - regex rules derived from real Podman CI flake history
+1. **Pattern matching** (fast, no API key needed) - regex rules derived from common CI flake patterns
 2. **LLM analysis** (optional) - sends the failure region to LLM for a richer plain-English explanation and fix hint
 
 ---
@@ -87,6 +85,14 @@ go build -o flakewatch ./cmd/flakewatch/
 ---
 
 ## Run
+Quickest way to try it:
+
+```bash
+export GITHUB_TOKEN=your_github_token
+./flakewatch
+```
+
+That's it - no flags needed. It defaults to the `containers/podman` repo, a limit of 10 runs, and auto-detects `scripts/extract.py` next to the binary. Pass `--owner`/`--repo` for a different project, or `--script` if you moved the binary somewhere else.
 
 ### Pattern-only mode (no LLM, no extra API key needed)
 
@@ -168,9 +174,9 @@ export GROQ_API_KEY=your_groq_key
 
 ---
 
-## Real Podman Flake Patterns Included
+## Flake Patterns Included
 
-Pattern rules in `extract.py` are based on actual flakes filed in the Podman issue tracker:
+The regex rules in `extract.py` cover common CI flake patterns. A few of these came from real issues found while testing against `containers/podman`:
 
 - `containers/podman#5336` -- `stopped` vs `exited` state race condition
 - `containers/podman#25057` -- machine test timeouts from slow quay.io image pulls
