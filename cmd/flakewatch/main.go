@@ -1,4 +1,4 @@
-// flakewatch: Agentic CI flake categorization for Podman and CNCF projects.
+// flakewatch: Agentic CI flake categorization for public GitHub repos
 // Environment variables:
 //	GITHUB_TOKEN - required for private repos, avoids rate limiting
 //	GROQ_API_KEY - optional, enables LLM-based categorization
@@ -32,7 +32,7 @@ func main(){
 	if scriptPath == ""{
 		exe, err := os.Executable()
 		if err == nil {
-			scriptPath = filepath.Join(filepath.Dir(exe), "..", "..", "scripts", "extract.py")
+			scriptPath = filepath.Join(filepath.Dir(exe), "scripts", "extract.py")
 		} else{
 			scriptPath = "scripts/extract.py"
 		}
