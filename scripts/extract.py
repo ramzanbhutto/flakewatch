@@ -141,7 +141,7 @@ def classify_with_llm(region_text: str, run_id: str) -> Optional[dict]:
     import urllib.request as req_lib
     import json as json_lib
 
-    prompt = f"""You are a CI flake analysis engine for the Podman container project.
+    prompt = f"""You are a CI flake analysis engine for GitHub Actions workflows.
 Analyze this CI failure log excerpt from a GitHub Actions run (run ID: {run_id}).
 
 Classify the failure into exactly one of these categories:
