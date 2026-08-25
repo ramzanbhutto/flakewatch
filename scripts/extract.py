@@ -166,7 +166,7 @@ Log excerpt:
 ---"""
 
     payload = json_lib.dumps({
-        "model": "groq/compound-mini",
+        "model": "openai/gpt-oss-120b",
         "max_completion_tokens": 256,
         "messages": [{"role": "user", "content": prompt}],
     }).encode()
