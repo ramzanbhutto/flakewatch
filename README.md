@@ -89,6 +89,7 @@ Quickest way to try it:
 
 ```bash
 export GITHUB_TOKEN=your_github_token
+
 ./flakewatch
 ```
 
